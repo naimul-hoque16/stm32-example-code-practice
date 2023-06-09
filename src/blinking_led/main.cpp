@@ -14,9 +14,22 @@
  * If no LICENSE file comes with this software, it is provided AS-IS.
  *
  ******************************************************************************
+ This program will blink an LED at a specific frequency. This code is meant to be
+ run on STM32F407G Board and will be blinking the Blue LED.
+
+ Blue LED is labeled as LD6 on the silkscreen. Blue LED is connected to
+ GPIO Port D Pin 15.
+
  */
 
 #include <stdint.h>
+
+
+/* Macros*/
+#define AHB1_BASE_ADDRESS 0x40020000UL
+#define RCC_BASE_ADDRESS 0x40023800UL
+#define RCC_AHB1_ENR (RCC_BASE_ADDRESS + 0x0030)
+
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
@@ -24,6 +37,10 @@
 
 int main(void)
 {
+    // Enable GPIO Port D Clock
+    unsigned long int *rcc_ahb1_enr = (unsigned long int*)RCC_AHB1_ENR;
+    *rcc_ahb1_enr |= (1 << 3);
+
     /* Loop forever */
 	for(;;);
 }
