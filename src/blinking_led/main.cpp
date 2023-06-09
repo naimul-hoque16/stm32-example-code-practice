@@ -28,7 +28,10 @@
 /* Macros*/
 #define AHB1_BASE_ADDRESS 0x40020000UL
 #define RCC_BASE_ADDRESS 0x40023800UL
+#define GPIO_D_BASE_ADDRESS 0x40020C00UL
 #define RCC_AHB1_ENR (RCC_BASE_ADDRESS + 0x0030)
+#define GPIO_D_ODR (GPIO_D_BASE_ADDRESS + 0x0014)
+
 
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
@@ -40,6 +43,16 @@ int main(void)
     // Enable GPIO Port D Clock
     unsigned long int *rcc_ahb1_enr = (unsigned long int*)RCC_AHB1_ENR;
     *rcc_ahb1_enr |= (1 << 3);
+
+
+    // Configure GPIO Port D by setting proper registers
+    // This part sets GPIO MODE to General Purpose Output Mode
+    unsigned long int *gpio_d_moder = (unsigned long int*)GPIO_D_BASE_ADDRESS;
+    *gpio_d_moder |= (1 << 30);
+    // This part sets the output value for bit 15 on the LED
+    unsigned long int *gpio_d_odr = (unsigned long int*)GPIO_D_ODR;
+    *gpio_d_odr |= (1 << 15);
+
 
     /* Loop forever */
 	for(;;);
