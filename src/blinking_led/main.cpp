@@ -23,6 +23,7 @@
  */
 
 #include <stdint.h>
+#include <stdbool.h>
 
 
 /* Macros*/
@@ -31,6 +32,9 @@
 #define GPIO_D_BASE_ADDRESS 0x40020C00UL
 #define RCC_AHB1_ENR (RCC_BASE_ADDRESS + 0x0030)
 #define GPIO_D_ODR (GPIO_D_BASE_ADDRESS + 0x0014)
+
+const bool ALL_LEDS = true;
+
 
 
 
@@ -46,12 +50,26 @@ int main(void)
 
 
     // Configure GPIO Port D by setting proper registers
-    // This part sets GPIO MODE to General Purpose Output Mode
+    // This part sets GPIO MODE to General Purpose Output Mode for Pin 15
     unsigned long int *gpio_d_moder = (unsigned long int*)GPIO_D_BASE_ADDRESS;
-    *gpio_d_moder |= (1 << 30);
-    // This part sets the output value for bit 15 on the LED
+    if (ALL_LEDS == false){
+    	// This part sets GPIO MODE to General Purpose Output Mode for Pin 15
+    	*gpio_d_moder |= (1 << 30);
+    }
+    else{
+    	// This part sets GPIO MODE to General Purpose Output Mode for Pin 12, 13, 14, and 15
+    	*gpio_d_moder |= (85 << 24);
+    }
+
+
     unsigned long int *gpio_d_odr = (unsigned long int*)GPIO_D_ODR;
-    *gpio_d_odr |= (1 << 15);
+    if (ALL_LEDS == false){
+		// This part sets the output value for bit 15 on the LED
+		*gpio_d_odr |= (1 << 15);
+    }else{
+    	// This part turns on all LEDS that are connected to GPIO Port D i.e 12, 13, 14, 15
+    	*gpio_d_odr |= (15 << 12);
+    }
 
 
     /* Loop forever */
