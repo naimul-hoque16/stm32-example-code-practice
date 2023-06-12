@@ -24,6 +24,7 @@
 
 #define RCC_BASE_ADDRESS 0x40023800UL
 #define RCC_AHB1ENR (RCC_BASE_ADDRESS + 0x0030) // Registers which enable peripheral clock on AHB1
+#define RCC_APB2ENR (RCC_BASE_ADDRESS + 0x0044)
 
 #define GPIOA_BASE_ADDRESS 0x40020000UL
 #define GPIOA_MODER (GPIOA_BASE_ADDRESS + 0x00)
@@ -38,7 +39,9 @@
 #define EXTI_BASE_ADDRESS 0x40013C00UL
 #define EXTI_IMR (EXTI_BASE_ADDRESS + 0x00)
 #define EXTI_PR (EXTI_BASE_ADDRESS + 0x14)
-#define EXTI_RTSR (EXTI_BASE_ADDRESS + 0x0C)
+#define EXTI_RTSR (EXTI_BASE_ADDRESS + 0x08)
+
+#define NVICIRQ_ENREG 0xE000E100
 
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
@@ -47,7 +50,16 @@
 int main(void)
 {
     /*Setup Code*/
-	
+
+	/*Enable Clocks for GPIO Port A and D*/
+	unsigned long int *rcc_ahb1enr = (unsigned long int*) RCC_AHB1ENR;
+	unsigned long int *rcc_apb2enr = (unsigned long int*) RCC_APB2ENR;
+	*rcc_ahb1enr |= (1 << 3); // Enables clock for Port D
+	*rcc_ahb1enr |= (1 << 0); // Enables clock for Port A
+	*rcc_apb2enr |= (1 << 14); // Enable Clock for SYSCFG
+
+
+
 	/*Set up EXTI for PA0 Button */
 	unsigned long int *syscfg_exticr1 = (unsigned long int*) SYSCFG_EXTICR1;
 	*syscfg_exticr1 &= ~(15 << 0);
@@ -55,12 +67,11 @@ int main(void)
 	unsigned long int *exti_rtsr = (unsigned long int*) EXTI_RTSR;
 	*exti_imr |= (1 << 0);
 	*exti_rtsr |= (1 << 0);
-	
 
-	/*Enable Clocks for GPIO Port A and D*/
-	unsigned long int *rcc_ahb1enr = (unsigned long int*) RCC_AHB1ENR;
-	*rcc_ahb1enr |= (1 << 3); // Enables clock for Port D
-	*rcc_ahb1enr |= (1 << 0); // Enables clock for Port A
+	/* NVIC Enable */
+	unsigned long int *nvic_irq_enr = (unsigned long int*) NVICIRQ_ENREG;
+	*nvic_irq_enr |= (1 << 6); // Enable EXTI0 Interrupt Line
+
 
 	/*Set all GPIO D Pins that LEDs are connected with to General Purpose Output Mode*/
 	unsigned long int *gpio_d_moder = (unsigned long int*) GPIOD_MODER;
@@ -79,4 +90,11 @@ int main(void)
 	/* Loop Forever */
 	for(;;);
 
+}
+
+void EXTI0_IRQHandler(void){
+	unsigned long int *gpio_d_odr = (unsigned long int*) GPIOD_ODR;
+	unsigned long int *exti_pr = (unsigned long int*) EXTI_PR;
+	*gpio_d_odr ^= (1 << 13);
+	*exti_pr |= (1 << 0);
 }
