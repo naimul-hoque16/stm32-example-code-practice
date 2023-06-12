@@ -32,6 +32,14 @@
 #define GPIOD_MODER (GPIOD_BASE_ADDRESS + 0x00)
 #define GPIOD_ODR (GPIOD_BASE_ADDRESS + 0x14)
 
+#define SYSCFG_BASE_ADDRESS 0x40013800UL
+#define SYSCFG_EXTICR1 (SYSCFG_BASE_ADDRESS + 0x08)
+
+#define EXTI_BASE_ADDRESS 0x40013C00UL
+#define EXTI_IMR (EXTI_BASE_ADDRESS + 0x00)
+#define EXTI_PR (EXTI_BASE_ADDRESS + 0x14)
+#define EXTI_RTSR (EXTI_BASE_ADDRESS + 0x0C)
+
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
@@ -39,6 +47,15 @@
 int main(void)
 {
     /*Setup Code*/
+	
+	/*Set up EXTI for PA0 Button */
+	unsigned long int *syscfg_exticr1 = (unsigned long int*) SYSCFG_EXTICR1;
+	*syscfg_exticr1 &= ~(15 << 0);
+	unsigned long int *exti_imr = (unsigned long int*) EXTI_IMR;
+	unsigned long int *exti_rtsr = (unsigned long int*) EXTI_RTSR;
+	*exti_imr |= (1 << 0);
+	*exti_rtsr |= (1 << 0);
+	
 
 	/*Enable Clocks for GPIO Port A and D*/
 	unsigned long int *rcc_ahb1enr = (unsigned long int*) RCC_AHB1ENR;
