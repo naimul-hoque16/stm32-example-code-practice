@@ -20,6 +20,7 @@
  */
 
 #include <stdint.h>
+#include <stdbool.h>
 
 
 #define RCC_BASE_ADDRESS 0x40023800UL
@@ -46,6 +47,15 @@
 #if !defined(__SOFT_FP__) && defined(__ARM_FP)
   #warning "FPU is not initialized, but the project is compiling for an FPU. Please initialize the FPU before use."
 #endif
+
+enum LED_STATE {
+	GREEN = 12,
+	ORANGE = 13,
+	RED = 14,
+	BLUE = 15
+};
+
+enum LED_STATE button_state = ORANGE;
 
 int main(void)
 {
@@ -84,7 +94,7 @@ int main(void)
 
 	/* By default, we turn on Orange LED First */
 	unsigned long int *gpio_d_odr = (unsigned long int*) GPIOD_ODR;
-	*gpio_d_odr |= (1 << 13);
+	*gpio_d_odr |= (1 << button_state);
 
 
 	/* Loop Forever */
@@ -95,6 +105,24 @@ int main(void)
 void EXTI0_IRQHandler(void){
 	unsigned long int *gpio_d_odr = (unsigned long int*) GPIOD_ODR;
 	unsigned long int *exti_pr = (unsigned long int*) EXTI_PR;
-	*gpio_d_odr ^= (1 << 13);
+	enum LED_STATE previous_button_state = button_state;
+
+	switch(button_state){
+	    case ORANGE:
+	    	button_state = RED;
+	    	break;
+	    case RED:
+	    	button_state = BLUE;
+	    	break;
+	    case BLUE:
+	    	button_state = GREEN;
+	    	break;
+	    case GREEN:
+	    	button_state = ORANGE;
+	    	break;
+	}
+
+	*gpio_d_odr |= (1 << button_state);
+	*gpio_d_odr &= ~(1 << previous_button_state);
 	*exti_pr |= (1 << 0);
 }
